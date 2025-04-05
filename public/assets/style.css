@@ -1,0 +1,21 @@
+.toast {
+    width: 500px;
+}
+
+#tables button:first-child {
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#tables .dropdown-toggle {
+    max-width: 3rem;
+}
+
+#tables .dropdown-item {
+    cursor: pointer;
+}
+
+caption.font-monospace {
+    white-space: pre;
+}

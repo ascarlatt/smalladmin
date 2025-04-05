@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html data-bs-theme="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>smallAdmin</title>
+
+    <link rel="icon" type="image/x-icon" sizes="16x16" href="./favicon.ico">
+
+    <link href="./assets/bs/css/bootstrap.min.css" rel="stylesheet">
+    <link href="./assets/bi/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="./assets/style.css" rel="stylesheet">
+
+    <script src="./assets/bs/js/bootstrap.bundle.min.js"></script>
+    <script src="./assets/main.js" type="module" charset="utf-8" defer></script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-4 col-lg-3 col-xxl-2 overflow-y-auto position-sticky top-0" id="sidebar">
+            <div class="dropdown my-1">
+                <select class="form-select form-select-lg bg-primary-subtle" id="database" aria-label="Select database">
+                    <option value="">No database</option>
+                </select>
+            </div>
+
+            <div id="tables">
+                <!-- List of tables will be loaded here. See queryService.loadTables(); -->
+            </div>
+
+            <div class="border-top mt-3 pt-2" id="settings">
+                <p class="h6"><i class="bi bi-gear"></i> Settings</p>
+                <div class="form-check form-switch" data-bs-toggle="tooltip" data-bs-title="Encapsulate table names in backticks when generating queries">
+                    <input class="form-check-input" type="checkbox" role="switch" id="backticks">
+                    <label class="form-check-label" for="backticks">Use `backticks`</label>
+                </div>
+                <div class="form-check form-switch" data-bs-toggle="tooltip"
+                     data-bs-title="Keep previous result tables in the results panel when executing another query">
+                    <input class="form-check-input" type="checkbox" role="switch" id="keepPreviousResults">
+                    <label class="form-check-label" for="keepPreviousResults">Keep previous results</label>
+                </div>
+                <div class="form-check form-switch" data-bs-toggle="tooltip" data-bs-title="Show query warnings alongside the results received from the server">
+                    <input class="form-check-input" type="checkbox" role="switch" id="displayWarnings">
+                    <label class="form-check-label" for="displayWarnings">Show query warnings</label>
+                </div>
+                <div class="form-check form-switch" data-bs-toggle="tooltip"
+                     data-bs-title="Run multiple queries in parallel threads. This makes database transactions impossible" disabled>
+                    <input class="form-check-input" type="checkbox" disabled role="switch" id="parallelQueries">
+                    <label class="form-check-label" for="parallelQueries">Run multiple queries in parallel</label>
+                </div>
+                <div class="mt-2">
+                    <label for="defaultClickAction" data-bs-toggle="tooltip" data-bs-title="What happens when you click on a table name">Default click
+                        action</label>
+                    <select class="form-select" id="defaultClickAction">
+                        <option value="">Do Nothing</option>
+                        <option value="describe">DESCRIBE</option>
+                        <option value="selectAll">SELECT *</option>
+                        <option value="select100">SELECT * LIMIT 100</option>
+                        <option value="selectCount">SELECT COUNT(*)</option>
+                        <option value="showFullColumns">SHOW FULL COLUMNS</option>
+                        <option value="showIndex">SHOW INDEX</option>
+                        <option value="showCreate">SHOW CREATE</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+        <div class="col my-1">
+            <div class="btn-group end-0" id="server-info" role="group" aria-label="Server info queries">
+                <button type="button" class="btn btn-outline-info btn-sm" data-query="showGrants"><i class="bi bi-person-lock"></i> GRANTS</button>
+                <button type="button" class="btn btn-outline-info btn-sm" data-query="showProcesslist"><i class="bi bi-diagram-3"></i> PROCESSLIST</button>
+                <button type="button" class="btn btn-outline-info btn-sm" data-query="showVariables"><i class="bi bi-sliders"></i> VARIABLES</button>
+                <button type="button" class="btn btn-outline-info btn-sm" data-query="showGlobalVariables"><i class="bi bi-sliders"></i> GLOBAL VARIABLES
+                </button>
+            </div>
+            <textarea id="sql-editor" class="form-control font-monospace my-3" rows="10" placeholder="One or multiple SQL Queries"></textarea>
+            <button id="sql-run" type="button" class="btn btn-primary btn-lg" data-bs-toggle="tooltip" data-bs-title="Alt + Enter">
+                <i class="bi bi-play-circle"></i>
+                Execute SQL
+            </button>
+            <div class="spinner-border text-primary float-end d-none" role="status"></div>
+
+            <div id="sql-results" class="mt-3">
+                <!-- This is where the query results are returned -->
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Login Modal -->
+<div class="modal  fade" id="login" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog"
+     aria-labelledby="loginLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="login-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="loginLabel">Login</h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="login-host" class="form-label">Hostname</label>
+                        <input type="text" class="form-control" name="login-host" id="login-host"
+                               aria-describedby="login-host-help">
+                        <div id="login-host-help" class="form-text">Database host (e.g. <i>localhost</i> or <i>hostname:port</i>).
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="login-user" class="form-label">Username</label>
+                        <input type="text" class="form-control" name="login-user" id="login-user"
+                               aria-describedby="login-user-help">
+                        <div id="login-user-help" class="form-text">Please don't let it be <i>root</i>.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="login-pass" class="form-label">Password</label>
+                        <input type="password" class="form-control" name="login-pass" id="login-pass"
+                               aria-describedby="login-pass-help">
+                        <div id="login-pass-help" class="form-text">It's not empty, right?</div>
+                    </div>
+                    <div class="d-none" id="login-error">
+                        <p class="text-danger"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-box-arrow-in-right"></i> Connect
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed bottom-0 start-50 translate-middle-x mb-2">
+    <div id="toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Title</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">Message</div>
+    </div>
+</div>
+
+</body>
+</html>

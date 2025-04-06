@@ -26,15 +26,26 @@ class HomeController extends Controller
      */
     public function asset(string $uri): ?string
     {
-        switch(strrchr($uri, '.')){
-            case '.css': Content::contentType('text/css'); break;
-            case '.js': Content::contentType('application/javascript'); break;
+        switch (strrchr($uri, '.')) {
+            case '.css':
+                Content::contentType('text/css');
+                break;
+            case '.js':
+                Content::contentType('application/javascript');
+                break;
             case '.woff':
-            case '.woff2': Content::contentType('application/font-woff2'); break;
-            case '.html': Content::contentType('text/html'); break;
+            case '.woff2':
+                Content::contentType('application/font-woff2');
+                break;
+            case '.ico':
+                Content::contentType('image/x-icon');
+                break;
+            case '.html':
+                Content::contentType('text/html');
+                break;
         }
 
-        if(file_exists(__DIR__ . '/../../public' . $uri)) {
+        if (file_exists(__DIR__ . '/../../public' . $uri)) {
             return file_get_contents(__DIR__ . '/../../public' . $uri);
         }
         Content::status(Content::NOT_FOUND);

@@ -1,34 +1,33 @@
 {
-    "name": "ascarlatt/smalladmin",
-    "description": "Fast and simple database administration utility",
-    "type": "project",
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "SmallAdmin\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Aurelian Scarlat"
-        }
-    ],
-    "require": {
-        "php": "^8.0",
-        "ext-json": "*",
-        "ext-mysqli": "*",
-        "vlucas/phpdotenv": "^5.6",
-        "twbs/bootstrap": "^5.3",
-        "twbs/bootstrap-icons": "^1.11"
-    },
-    "scripts": {
-        "post-update-cmd": [
-            "rm -rf public/assets/bs",
-            "mkdir -p public/assets/bs",
-            "cp -rf vendor/twbs/bootstrap/dist/* public/assets/bs",
-            "rm -rf public/assets/bi",
-            "mkdir -p public/assets/bi",
-            "cp -rf vendor/twbs/bootstrap-icons/font/* public/assets/bi"
-        ]
+  "name": "ascarlatt/smalladmin",
+  "description": "Fast and simple database administration utility",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "SmallAdmin\\": "src/"
     }
+  },
+  "authors": [
+    {
+      "name": "Aurelian Scarlat"
+    }
+  ],
+  "require": {
+    "php": "^8.0",
+    "ext-json": "*",
+    "ext-mysqli": "*",
+    "twbs/bootstrap": "^5.3",
+    "twbs/bootstrap-icons": "^1.11"
+  },
+  "scripts": {
+    "post-update-cmd": [
+      "rm -rf public/assets/bs",
+      "mkdir -p public/assets/bs",
+      "cp -rf vendor/twbs/bootstrap/dist/* public/assets/bs",
+      "rm -rf public/assets/bi",
+      "mkdir -p public/assets/bi",
+      "cp -rf vendor/twbs/bootstrap-icons/font/* public/assets/bi"
+    ]
+  }
 }

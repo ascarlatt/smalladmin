@@ -11,6 +11,7 @@ require __DIR__ . '/vendor/autoload.php';
 (new Router())
     ->get('/', [HomeController::class, 'index'])
     ->get('/assets/*', [HomeController::class, 'asset'])
+    ->get('/favicon.ico', [HomeController::class, 'asset'])
     ->post('/query', [QueryController::class, 'query'])
     ->get('/query', [QueryController::class, 'test'])
     ->dispatch();

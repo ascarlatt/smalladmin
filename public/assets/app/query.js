@@ -8,6 +8,7 @@ import Utils from "./utils.js";
  */
 class QueryService {
     url = './query'; // the API url
+    ulrMulti = './multi-query'; // the API url for multiple queries
 
     /**
      * Executes a database query by sending credentials, database details, and a query string
@@ -19,11 +20,12 @@ class QueryService {
      * @param {string} credentials.pass - The password for database authentication.
      * @param {string} db - The name of the database to query.
      * @param {string} queryString - The query to be executed on the database.
+     * @param multiple
      * @return {Promise<Object>} A promise that resolves to the response object after processing the query or rejects
      *                           with an error message in case of failure.
      */
-    async run(credentials, db, queryString) {
-        return fetch(this.url, {
+    async run(credentials, db, queryString, multiple = false) {
+        return fetch(multiple ? this.ulrMulti : this.url, {
             method: 'POST',
             body: new URLSearchParams({
                 'credentials[host]': credentials.host,

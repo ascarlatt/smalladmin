@@ -120,7 +120,7 @@ class Display {
      *
      * @return {void} This method does not return a value.
      */
-    initSettings() {
+    async initSettings() {
         document.querySelectorAll('#settings input').forEach(element => {
             element.checked = state.behavior[element.id];
             element.addEventListener('change', () => {
@@ -143,7 +143,7 @@ class Display {
      *
      * @return {void} This method does not return a value.
      */
-    initDatabaseSelect() {
+    async initDatabaseSelect() {
         document.querySelector('#database').addEventListener('change', ev => {
             state.server.database = ev.target.value;
             state.save();
@@ -151,14 +151,23 @@ class Display {
                 document.querySelector('#tables').innerHTML = '';
                 return;
             }
-            queryService.loadTables(this.getCredentials(), state.server.database).then(tables => {
-                if (tables === null) {
-                    return;
-                }
-                state.server.tables = tables;
-                state.save();
-                this.showTables();
-            });
+            this.loadTables();
+        });
+    }
+
+    /**
+     * Loads the tables from the database using the credentials and updates the server state.
+     *
+     * @return {Promise<void>} A promise that resolves when the tables are successfully loaded and the state is updated.
+     */
+    async loadTables() {
+        queryService.loadTables(this.getCredentials(), state.server.database).then(tables => {
+            if (tables === null) {
+                return;
+            }
+            state.server.tables = tables;
+            state.save();
+            this.showTables();
         });
     }
 
@@ -284,49 +293,76 @@ class Display {
             document.querySelector('#sql-results').innerHTML = '';
         }
         this.toggleQuerySubmitButton('disabled');
+        document.querySelector('#sql-duration').classList.add('d-none');
         const runStart = new Date();
-        queryService.run(this.getCredentials(), state.server.database, query).then(result => {
+        queryService.run(this.getCredentials(), state.server.database, query, true).then(results => {
             this.toggleQuerySubmitButton('active');
 
             // something really bad happened (with the connection or something)
-            if (result === null) {
+            if (results === null) {
                 return;
             }
+
             let duration = (new Date() - runStart) / 1000; // seconds
-            let html = '<table class="table table-striped table-hover table-bordered">';
-            html += '<caption class="caption-top font-monospace">' + Utils.escapeHtml(result.query) + '</caption>';
-            html += '<caption>' +
-                '<pre class="float-end">Transfer Duration: ' + (Math.round(duration * 100) / 100) + ' seconds</pre>' +
-                '<pre>Query Duration: ' + (Math.round(result.duration * 100) / 100) + ' seconds</pre>' +
-                '</caption>';
-            if (result.errno != 0) {
-                html += '<thead><tr><th>Error Code</th><th>Error Message</th></tr></thead>';
-                html += '<tbody><tr><td class="text-danger-emphasis">' + result.errno + '</td><td class="text-danger-emphasis">' + result.error + '</td></tr></tbody>';
-            } else if (result.affected > -1) {
-                html += '<thead><tr><th>Affected Rows</th></tr></thead>';
-                html += '<tbody><tr><td>' + result.affected + '</td></tr></tbody>';
-            } else {
-                html += '<thead>';
-                html += '<tr>';
-                for (const column of result.columns) {
-                    html += '<th>' + Utils.escapeHtml(column) + '</th>';
+            document.querySelector('#sql-duration span').innerHTML = duration.toFixed(3);
+            document.querySelector('#sql-duration').classList.remove('d-none');
+
+            let html = '';
+            let loadDb = false;
+            let loadTbl = false;
+            for (const result of results) {
+                html += this.generateResultTable(result);
+                if (result.query.match(/(CREATE|DROP|ALTER) DATABASE/i)) {
+                    loadDb = true;
+                } else if (result.query.match(/(CREATE|DROP|ALTER) TABLE/i)) {
+                    loadTbl = true;
+                }
+            }
+            document.querySelector('#sql-results').insertAdjacentHTML('afterbegin', html);
+
+            /**
+             * Load the list of tables or databases if needed
+             */
+            if (loadDb) {
+                document.querySelector('#login-form').dispatchEvent(new Event('submit'));
+            } else if (loadTbl) {
+                this.loadTables();
+            }
+
+        });
+    }
+
+    generateResultTable(result) {
+        let html = '<table class="table table-striped table-hover table-bordered">';
+        html += '<caption class="caption-top font-monospace">' + Utils.escapeHtml(result.query) + '</caption>';
+        html += '<caption class="font-monospace">Query Duration: ' + result.duration.toFixed(3) + ' seconds</caption>';
+        if (result.errno != 0) {
+            html += '<thead><tr><th>Error Code</th><th>Error Message</th></tr></thead>';
+            html += '<tbody><tr><td class="text-danger-emphasis">' + result.errno + '</td><td class="text-danger-emphasis">' + result.error + '</td></tr></tbody>';
+        } else if (result.affected > -1) {
+            html += '<thead><tr><th>Affected Rows</th></tr></thead>';
+            html += '<tbody><tr><td>' + result.affected + '</td></tr></tbody>';
+        } else {
+            html += '<thead>';
+            html += '<tr>';
+            for (const column of result.columns) {
+                html += '<th>' + Utils.escapeHtml(column) + '</th>';
+            }
+            html += '</tr>';
+            html += '</thead>';
+            html += '<tbody>';
+            for (let i = 0; i < result.rows.length; i++) {
+                html += '<tr title="Row ' + (i + 1) + '">';
+                for (const cell of result.rows[i]) {
+                    html += '<td>' + (cell == null ? '<em>NULL</em>' : Utils.escapeHtml(cell)) + '</td>';
                 }
                 html += '</tr>';
-                html += '</thead>';
-                html += '<tbody>';
-                for (let i = 0; i < result.rows.length; i++) {
-                    html += '<tr title="Row ' + (i + 1) + '">';
-                    for (const cell of result.rows[i]) {
-                        html += '<td>' + (cell == null ? '<em>NULL</em>' : Utils.escapeHtml(cell)) + '</td>';
-                    }
-                    html += '</tr>';
-                }
-                html += '</tbody>';
             }
-            html += '</table>';
+            html += '</tbody>';
+        }
+        html += '</table>';
 
-            document.querySelector('#sql-results').insertAdjacentHTML('afterbegin', html);
-        });
+        return html;
     }
 
 }

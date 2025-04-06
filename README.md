@@ -7,6 +7,9 @@ The aim is to be simpler than [phpMyAdmin](https://www.phpmyadmin.net/), more us
 friendly than [Adminer](https://www.adminer.org/) and prettier than both.
 
 As of now, it supports browsing databases, browsing tables and running queries.
+You can run multiple queries in the query box. Some tests were done, but probably
+not all edge cases were considered when parsing the query
+(e.g. the [`DELIMITER`](https://dev.mysql.com/doc/refman/8.4/en/stored-programs-defining.html) statement).
 
 Versions `0.*` should be treated as beta and are not to be relied upon.
 
@@ -58,7 +61,6 @@ not exposed directly.
 There are big plans for the future. In no particular order:
 
 * keep query history
-* run multiple queries
 * export tables (or even the whole database)
 * import .sql files
 * live demo

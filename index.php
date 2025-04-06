@@ -13,6 +13,8 @@ require __DIR__ . '/vendor/autoload.php';
     ->get('/assets/*', [HomeController::class, 'asset'])
     ->get('/favicon.ico', [HomeController::class, 'asset'])
     ->post('/query', [QueryController::class, 'query'])
-    ->get('/query', [QueryController::class, 'test'])
+    ->post('/multi-query', [QueryController::class, 'multiQuery'])
+//    ->get('/query', [QueryController::class, 'test'])
     ->dispatch();
 
+$query = new \SmallAdmin\Services\QueryParser();
